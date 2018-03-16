@@ -1,0 +1,55 @@
+
+spring:
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
+    date-format: yyyy-MM-dd HH:mm:ss
+    joda-date-time-format: yyyy-MM-dd HH:mm:ss
+    default-property-inclusion: non_null
+    time-zone: GMT+8
+  redis:
+    host: localhost
+    port: 6379
+    database: 0
+    password: jpdbb1387lipushdatabseredis
+  datasource:
+    url: jdbc:mysql://localhost:3306/iot?useUnicode=true&characterEncoding=utf-8
+    username: root
+    password: 1234
+    driverClass: com.mysql.jdbc.Driver
+    cachePrepStmts: true
+    prepStmtCacheSize: 250
+    prepStmtCacheSqlLimit: 2048
+    useServerPrepStmts: true
+    useLocalSessionState: true
+    useLocalTransactionState: true
+    rewriteBatchedStatements: true
+    cacheResultSetMetadata: true
+    cacheServerConfiguration: true
+    elideSetAutoCommits: true
+    maintainTimeStats: false
+
+swagger:
+  host: localhost:8080
+
+jwt:
+#  header: Authorization
+  token:
+    secret: mySecret
+#    7天
+#    expiration: 604800
+
+#    一天
+    expiration: 86400
+
+# mybatis
+# 对应实体类的包名
+mybatis:
+  typeAliasesPackage: com.liuyang19900520.domain
+# mapper.xml文件所在位置，我放到了resources下面
+  mapperLocations: classpath:**/mapper/*.xml
+
+logging:
+  file: robot_web.log
+  path: C:\\Users\\liuyang19900520\\Desktop\\logs
+

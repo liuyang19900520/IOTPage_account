@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.liuyang19900520.dao.SysUserDao">
+
+    <resultMap id="result" type="com.liuyang19900520.domain.SysUser" extends="baseResult">
+
+        <result property="userName" column="user_name"/>
+        <result property="password" column="password"/>
+        <result property="avatar" column="avatar"/>
+        <result property="nickname" column="nickname"/>
+        <result property="email" column="email"/>
+
+    </resultMap>
+
+
+    <select id="selectByAccount" resultType="com.liuyang19900520.domain.SysUser">
+
+        SELECT *
+        FROM sys_user
+        WHERE user_name = #{userName}
+
+    </select>
+
+
+</mapper>
