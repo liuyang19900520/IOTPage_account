@@ -48,6 +48,6 @@ hs_err_pid*
 .idea/modules.xml
 .idea/uiDesigner.xml
 .idea/workspace.xml
+.idea/vcs.xml
 IOTPage_account.iml
-pom.xml
 robot_web.log
