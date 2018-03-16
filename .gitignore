@@ -1,0 +1,20 @@
+# Created by .ignore support plugin (hsz.mobi)
+.gitignore
+.idea/compiler.xml
+.idea/dataSources.local.xml
+.idea/dataSources.xml
+.idea/dataSources/
+.idea/encodings.xml
+.idea/inspectionProfiles/
+.idea/libraries/
+.idea/misc.xml
+.idea/modules.xml
+.idea/uiDesigner.xml
+.idea/workspace.xml
+IOTPage_account.iml
+pom.xml
+robot_web.log
+src/main/java/com/
+src/main/resources/
+src/test/
+target/
