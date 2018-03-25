@@ -5,13 +5,23 @@
 <mapper namespace="com.liuyang19900520.dao.SysUserDao">
 
     <resultMap id="result" type="com.liuyang19900520.domain.SysUser" extends="baseResult">
-
         <result property="userName" column="user_name"/>
         <result property="password" column="password"/>
         <result property="avatar" column="avatar"/>
         <result property="nickname" column="nickname"/>
         <result property="email" column="email"/>
+    </resultMap>
 
+    <resultMap id="resultRoles" type="com.liuyang19900520.domain.SysRole">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="code" column="code"/>
+    </resultMap>
+
+    <resultMap id="resultPermissions" type="com.liuyang19900520.domain.SysResource">
+        <result property="id" column="id"/>
+        <result property="permission" column="permisson"/>
+        <result property="name" column="name"/>
     </resultMap>
 
 
@@ -23,5 +33,20 @@
 
     </select>
 
+    <select id="listRolesByAccount" resultMap="resultRoles">
+        SELECT r.*
+        FROM sys_role r
+            INNER JOIN sys_user_role ur ON r.id = ur.role_id
+            INNER JOIN sys_user u ON u.id = ur.user_id
+        WHERE u.user_name = #{userName}
+    </select>
+
+    <select id="listPermissionsByAccount" resultMap="resultPermissions">
+        SELECT r.permission
+        FROM sys_resource r
+            INNER JOIN sys_role_resource rr ON r.id = rr.resource_id
+            INNER JOIN sys_role role ON rr.role_id = role.id
+        WHERE role.id = #{roleId}
+    </select>
 
 </mapper>

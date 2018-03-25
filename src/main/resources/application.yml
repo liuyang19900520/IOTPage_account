@@ -8,7 +8,7 @@ spring:
     default-property-inclusion: non_null
     time-zone: GMT+8
   redis:
-    host: localhost
+    host: 192.168.25.129
     port: 6379
     database: 0
     password: jpdbb1387lipushdatabseredis
@@ -52,4 +52,8 @@ mybatis:
 logging:
   file: robot_web.log
   path: C:\\Users\\liuyang19900520\\Desktop\\logs
+
+appkey: E2B7B173A8801CD1455878A1383B2337
+
+
 

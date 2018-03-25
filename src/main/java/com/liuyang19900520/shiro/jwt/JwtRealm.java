@@ -1,110 +1,83 @@
 package com.liuyang19900520.shiro.jwt;
 
-import com.google.common.collect.Sets;
-import com.liuyang19900520.domain.SysUser;
-import com.liuyang19900520.service.UserService;
-import com.liuyang19900520.utils.TokenUtil;
-import org.apache.shiro.authc.*;
+import com.liuyang19900520.utils.CryptoUtil;
+import io.jsonwebtoken.*;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.AuthenticationInfo;
+import org.apache.shiro.authc.AuthenticationToken;
+import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerProperties;
 
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Created by liuyang on 2018/3/18
+ */
 public class JwtRealm extends AuthorizingRealm {
-
-    @Autowired
-    private TokenUtil tokenUtil;
-
-    @Autowired
-    UserService userService;
-
     @Override
     public boolean supports(AuthenticationToken token) {
         //表示此Realm只支持JwtToken类型
         return token instanceof JwtToken;
     }
 
+    /**
+     * 认证
+     */
     @Override
-    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        // 根据用户名查找角色，请根据需求实现
-        String username = (String)principals.getPrimaryPrincipal();
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token)
+            throws AuthenticationException {
 
-        SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
-
-        // 根据username查询角色
-        authorizationInfo.setRoles(Sets.newHashSet("admin","superadmin"));
-
-        // 根据username查询权限
-        authorizationInfo.setStringPermissions(Sets.newHashSet("system:*"));
-
-        return authorizationInfo;
-    }
-
-    @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
-        JwtToken jwtToken = (JwtToken) authenticationToken;
-
-        // 获取token
-        String token = jwtToken.getToken();
-
-        // 从token中获取用户名
-        String username = tokenUtil.getUsernameFromToken(token);
-
-        // 根据用户名查询数据库
-        SysUser user=  userService.findUserByAccount(username);
-//        SysUser user = new SysUser();
-//        user.setUserName(username);
-//        user.setStatus(1);
-//        user.setPassword("000000");
-
-        // 用户不存在
-        if (user == null) {
-            throw new UnknownAccountException();
+        // 只认证JwtToken
+        if (!(token instanceof JwtToken)) {
+            return null;
         }
-
-        // 用户被禁用
-        if(user.getStatus()==0){
-            throw new LockedAccountException();
-        }
+        String verifyToken = "";
+        String jwt = ((JwtToken) token).getJwt();
 
         try {
-            return new SimpleAuthenticationInfo(
-                    username,
-                    token,
-                    getName()
-            );
+            // 预先解析Payload
+            // 没有做任何的签名校验
+            verifyToken = CryptoUtil.verifyToken(jwt);
+
+
+        } catch (MalformedJwtException e) {
+            throw new AuthenticationException("jwt格式错误");
         } catch (Exception e) {
-            throw new AuthenticationException(e);
+            throw new AuthenticationException("jwt无效");
         }
+
+        return new SimpleAuthenticationInfo(verifyToken, Boolean.TRUE, this.getName());
     }
 
+    /**
+     * 授权,JWT已包含访问主张只需要解析其中的主张定义就行了
+     */
     @Override
-    public void clearCachedAuthorizationInfo(PrincipalCollection principals) {
-        super.clearCachedAuthorizationInfo(principals);
+    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
+        String payload = (String) principals.getPrimaryPrincipal();
+//        // likely to be json, parse it:
+//        if (payload.startsWith("jwt:") && payload.charAt(4) == '{'
+//                && payload.charAt(payload.length() - 1) == '}') {
+//
+//            Map<String, Object> payloadMap = CryptoUtil.readValue(payload.substring(4));
+//            Set<String> roles = CryptoUtil.split((String) payloadMap.get("roles"));
+//            Set<String> permissions = CryptoUtil.split((String) payloadMap.get("perms"));
+//            SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
+//            if (null != roles && !roles.isEmpty()) {
+//                info.setRoles(roles);
+//            }
+//            if (null != permissions && !permissions.isEmpty()) {
+//                info.setStringPermissions(permissions);
+//            }
+//            return info;
+//        }
+        return null;
     }
 
-    @Override
-    public void clearCachedAuthenticationInfo(PrincipalCollection principals) {
-        super.clearCachedAuthenticationInfo(principals);
-    }
-
-    @Override
-    public void clearCache(PrincipalCollection principals) {
-        super.clearCache(principals);
-    }
-
-    public void clearAllCachedAuthorizationInfo() {
-        getAuthorizationCache().clear();
-    }
-
-    public void clearAllCachedAuthenticationInfo() {
-        getAuthenticationCache().clear();
-    }
-
-    public void clearAllCache() {
-        clearAllCachedAuthenticationInfo();
-        clearAllCachedAuthorizationInfo();
-    }
 
 }

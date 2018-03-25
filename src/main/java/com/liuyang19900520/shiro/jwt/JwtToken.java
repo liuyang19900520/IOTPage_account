@@ -1,28 +1,31 @@
 package com.liuyang19900520.shiro.jwt;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.apache.shiro.authc.AuthenticationToken;
 
+/**
+ * Created by liuyang on 2018/3/18
+ * @author liuya
+ */
 @Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class JwtToken implements AuthenticationToken {
 
-    private String principal;
+    private String jwt;// json web token
+    private String host;// 客户端IP
 
-    private String token;
+    public JwtToken(String jwt, String host) {
+        this.jwt = jwt;
+        this.host = host;
+    }
 
     @Override
-    public String getPrincipal() {
-        return principal;
+    public Object getPrincipal() {
+        return this.jwt;
     }
 
     @Override
     public Object getCredentials() {
-        return token;
+        return Boolean.TRUE;
     }
+
 }

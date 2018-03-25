@@ -13,6 +13,7 @@ import java.util.Map;
 public class TokenUtil {
 
     static final String CLAIM_KEY_USERNAME = "sub";
+    static final String CLAIM_KEY_ROLE = "role";
     static final String CLAIM_KEY_AUDIENCE = "audience";
     static final String CLAIM_KEY_CREATED = "created";
 
@@ -60,13 +61,15 @@ public class TokenUtil {
 
     /**
      * 生成token
+     *
      * @param username 用户名
-     * @param device  org.springframework.mobile.device 设备判断对象
+     * @param device   org.springframework.mobile.device 设备判断对象
      * @return
      */
     public String generateToken(String username, Device device) {
         Map<String, Object> claims = new HashMap<>();
         claims.put(CLAIM_KEY_USERNAME, username);
+        claims.put(CLAIM_KEY_ROLE, "admin");
         claims.put(CLAIM_KEY_AUDIENCE, generateAudience(device));
         claims.put(CLAIM_KEY_CREATED, new Date());
         return generateToken(claims);
@@ -82,6 +85,7 @@ public class TokenUtil {
 
     /**
      * 生成token时间 = 当前时间 + expiration（properties中配置的失效时间）
+     *
      * @return
      */
     private Date generateExpirationDate() {
@@ -90,23 +94,28 @@ public class TokenUtil {
 
     /**
      * 通过spring-mobile-device的device检测访问主体
+     *
      * @param device
      * @return
      */
-    private  String generateAudience(Device device) {
+    private String generateAudience(Device device) {
         String audience = AUDIENCE_UNKNOWN;
         if (device.isNormal()) {
-            audience = AUDIENCE_WEB;//PC端
+            //PC端
+            audience = AUDIENCE_WEB;
         } else if (device.isTablet()) {
-            audience = AUDIENCE_TABLET;//平板
+            //平板
+            audience = AUDIENCE_TABLET;
         } else if (device.isMobile()) {
-            audience = AUDIENCE_MOBILE;//手机
+            //手机
+            audience = AUDIENCE_MOBILE;
         }
         return audience;
     }
 
     /**
      * 根据token获取用户名
+     *
      * @param token
      * @return
      */
@@ -122,7 +131,25 @@ public class TokenUtil {
     }
 
     /**
+     * 根据token获取角色
+     *
+     * @param token
+     * @return
+     */
+    public String getRoleFromToken(String token) {
+        String role;
+        try {
+            final Claims claims = getClaimsFromToken(token);
+            role = (String) claims.get(CLAIM_KEY_ROLE);
+        } catch (Exception e) {
+            role = null;
+        }
+        return role;
+    }
+
+    /**
      * 判断token失效时间是否到了
+     *
      * @param token
      * @return
      */
@@ -133,6 +160,7 @@ public class TokenUtil {
 
     /**
      * 获取设置的token失效时间
+     *
      * @param token
      * @return
      */
@@ -147,18 +175,19 @@ public class TokenUtil {
         return expiration;
     }
 
-    // /**
-    //  * Token失效校验
-    //  * @param token token字符串
-    //  * @param loginInfo 用户信息
-    //  * @return
-    //  */
-    // public Boolean validateToken(String token, LoginInfo loginInfo) {
-    //     final String username = getUsernameFromToken(token);
-    //     return (
-    //             username.equals(loginInfo.getUsername())
-    //                     && !isTokenExpired(token));
-    // }
+//    /**
+//     * Token失效校验
+//     *
+//     * @param token     token字符串
+//     * @param loginInfo 用户信息
+//     * @return
+//     */
+//    public Boolean validateToken(String token, LoginInfo loginInfo) {
+//        final String username = getUsernameFromToken(token);
+//        return (
+//                username.equals(loginInfo.getUsername())
+//                        && !isTokenExpired(token));
+//    }
 
     public String refreshToken(String token) {
         final Claims claims = this.getClaimsFromToken(token);

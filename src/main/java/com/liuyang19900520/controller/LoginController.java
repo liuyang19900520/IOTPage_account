@@ -3,7 +3,8 @@ package com.liuyang19900520.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 import com.google.common.collect.ImmutableMap;
-import com.liuyang19900520.shiro.jwt.JwtToken;
+import com.liuyang19900520.commons.pojo.Messages;
+import com.liuyang19900520.commons.pojo.ResultVo;
 import com.liuyang19900520.shiro.LoginUser;
 import com.liuyang19900520.utils.TokenUtil;
 import org.apache.shiro.SecurityUtils;
@@ -36,26 +37,31 @@ public class LoginController {
     private DefaultKaptcha captchaProducer;
 
     @Autowired
-    private RedisTemplate<String,Object> redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
-    @GetMapping(value="/captcha")
-    public Map<String,String> captcha(){
-        try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+    @GetMapping(value = "/captcha")
+    public Map<String, String> captcha() {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             String capText = captchaProducer.createText();
             String uuid = UUID.randomUUID().toString();
-            redisTemplate.boundValueOps(uuid).set(capText,60, TimeUnit.SECONDS);
+            redisTemplate.boundValueOps(uuid).set(capText, 60, TimeUnit.SECONDS);
             BufferedImage bi = captchaProducer.createImage(capText);
             ImageIO.write(bi, "png", baos);
             String imgBase64 = Base64.encodeBase64String(baos.toByteArray());
-            return ImmutableMap.of(uuid,"data:image/jpeg;base64,"+imgBase64);
+            return ImmutableMap.of(uuid, "data:image/jpeg;base64," + imgBase64);
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(),e);
+            throw new RuntimeException(e.getMessage(), e);
         }
     }
 
-    @GetMapping("/login")
-    public String a(Device device){
-        return device.getDevicePlatform().name();
+    @PostMapping("/test")
+    public String a(Device device) {
+
+
+
+
+
+        return "";
     }
 
     @PostMapping("/login")
@@ -65,15 +71,13 @@ public class LoginController {
         String username = loginUser.getUsername();
         String password = loginUser.getPassword();
 
-        // 验证用户名密码成功后生成token
-        String token = tokenUtil.generateToken(username, device);
-        // 构建JwtToken
-        JwtToken jwtToken = JwtToken.builder().token(token).principal(username).build();
+        UsernamePasswordToken upt = new UsernamePasswordToken(username, password);
 
+        //验证
         Subject subject = SecurityUtils.getSubject();
         try {
             // 该方法会调用JwtRealm中的doGetAuthenticationInfo方法
-            subject.login(jwtToken);
+            subject.login(upt);
         } catch (UnknownAccountException exception) {
             exception.printStackTrace();
             System.out.println("账号不存在");
@@ -92,24 +96,29 @@ public class LoginController {
         }
 
         // 认证通过
-        if(subject.isAuthenticated()){
+        if (subject.isAuthenticated()) {
+
+
+            // 验证用户名密码成功后生成token
+            String token = tokenUtil.generateToken(username, device);
 
             // 将token写出到cookie
-            Cookie cookie =new Cookie("token",token);
+            Cookie cookie = new Cookie("token", token);
             cookie.setHttpOnly(true);
             cookie.setMaxAge(3600 * 5);
             cookie.setPath("/");
             response.addCookie(cookie);
             response.flushBuffer();
 
-            jsonObject.put("code",200);
-            jsonObject.put("msg","success");
-            jsonObject.put("token",token);
+
+            jsonObject.put("code", 200);
+            jsonObject.put("msg", "success");
+            jsonObject.put("token", token);
             jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
-            return jsonObject;
-        }else{
-            jsonObject.put("code",403);
-            jsonObject.put("msg","error");
+            return ResultVo.success(Messages.OK, token);
+        } else {
+            jsonObject.put("code", 403);
+            jsonObject.put("msg", "error");
             jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
             return jsonObject;
         }
@@ -118,15 +127,16 @@ public class LoginController {
 
     /**
      * 检查是否登录
+     *
      * @param token
      * @return
      */
     @GetMapping(value = "/checkLogin")
-    public Object checkLogin(@CookieValue("token") String token){
+    public Object checkLogin(@CookieValue("token") String token) {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("code",200);
-        if(StringUtils.isEmpty(token)){
-            jsonObject.put("msg","令牌为空");
+        jsonObject.put("code", 200);
+        if (StringUtils.isEmpty(token)) {
+            jsonObject.put("msg", "令牌为空");
         }
 
         // 根据token获取用户信息
@@ -139,13 +149,14 @@ public class LoginController {
 
     /**
      * 登出
+     *
      * @param request
      * @param response
      * @return
      * @throws IOException
      */
     @GetMapping(value = "/logout")
-    public Object logout(HttpServletRequest request,HttpServletResponse response) throws IOException {
+    public Object logout(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Optional<Cookie> cookie = Arrays.stream(request.getCookies())
                 .filter(ck -> "token".equals(ck.getName()))
                 .limit(1)
@@ -159,14 +170,15 @@ public class LoginController {
         response.addCookie(cookie.get());
         response.flushBuffer();
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("code",200);
-        jsonObject.put("msg","success");
+        jsonObject.put("code", 200);
+        jsonObject.put("msg", "success");
         return jsonObject;
     }
 
 
     /**
      * 更新token
+     *
      * @param token
      * @return
      */
@@ -174,9 +186,9 @@ public class LoginController {
     public Object refreshToken(@CookieValue(value = "token") String token) {
         JSONObject jsonObject = new JSONObject();
         String newToken = tokenUtil.refreshToken(token);
-        jsonObject.put("code",200);
-        jsonObject.put("msg","success");
-        jsonObject.put("token",newToken);
+        jsonObject.put("code", 200);
+        jsonObject.put("msg", "success");
+        jsonObject.put("token", newToken);
         jsonObject.put("timestamp", Calendar.getInstance().getTimeInMillis());
         return jsonObject;
     }

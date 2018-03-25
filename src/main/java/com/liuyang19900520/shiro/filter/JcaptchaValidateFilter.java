@@ -10,6 +10,9 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
+/**
+ * @author liuya
+ */
 public class JcaptchaValidateFilter extends AccessControlFilter {
 
     private boolean jcaptchaEbabled = true;     //是否开启验证码支持
@@ -39,32 +42,32 @@ public class JcaptchaValidateFilter extends AccessControlFilter {
     @Override
     protected boolean isAccessAllowed(ServletRequest request, ServletResponse servletResponse, Object o) throws Exception {
         //1、设置验证码是否开启属性，页面可以根据该属性来决定是否显示验证码
-        request.setAttribute("jcaptchaEbabled",jcaptchaEbabled);
+        request.setAttribute("jcaptchaEbabled", jcaptchaEbabled);
         HttpServletRequest httpRequest = WebUtils.toHttp(request);
 
         //2、判断验证码是否禁用或不是表单提交（允许访问）
-        if(!jcaptchaEbabled || !"post".equalsIgnoreCase(httpRequest.getMethod())){
+        if (!jcaptchaEbabled || !"post".equalsIgnoreCase(httpRequest.getMethod())) {
             return true;
         }
         String captchaKey = httpRequest.getParameter(redisCaptchaKey);
-        if(StringUtils.isEmpty(captchaKey)){
-            request.setAttribute(failureKeyAttribute,"验证码Key为空！");
+        if (StringUtils.isEmpty(captchaKey)) {
+            request.setAttribute(failureKeyAttribute, "验证码Key为空！");
             return false;
         }
 
-        RedisTemplate<String,Object> redisTemplate = (RedisTemplate) ApplicationContextUtil.getBeanObj("redisTemplate");
+        RedisTemplate<String, Object> redisTemplate = (RedisTemplate) ApplicationContextUtil.getBeanObj("redisTemplate");
         String captchaValue = (String) redisTemplate.boundValueOps(captchaKey).get();
 
-        if(StringUtils.isEmpty(captchaValue)){
-            request.setAttribute(failureKeyAttribute,"验证码已过期！");
+        if (StringUtils.isEmpty(captchaValue)) {
+            request.setAttribute(failureKeyAttribute, "验证码已过期！");
             return false;
         }
 
-        if((httpRequest.getParameter(jcaptchaParam)).equalsIgnoreCase(captchaValue)){
+        if ((httpRequest.getParameter(jcaptchaParam)).equalsIgnoreCase(captchaValue)) {
             return true;
         }
 
-        request.setAttribute(failureKeyAttribute,"验证码输入错误！");
+        request.setAttribute(failureKeyAttribute, "验证码输入错误！");
 
         return false;
     }

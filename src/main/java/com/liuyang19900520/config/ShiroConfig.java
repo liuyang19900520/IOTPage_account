@@ -1,17 +1,26 @@
 package com.liuyang19900520.config;
 
+import com.google.common.collect.Lists;
+import com.liuyang19900520.commons.interceptor.HttpServletRequestReplacedFilter;
+import com.liuyang19900520.shiro.CredentialsMatcher;
+import com.liuyang19900520.shiro.filter.HmacFilter;
 import com.liuyang19900520.shiro.filter.JcaptchaValidateFilter;
 import com.liuyang19900520.shiro.StatelessDefaultSubjectFactory;
-import com.liuyang19900520.shiro.filter.JwtAuthenticationFilter;
+import com.liuyang19900520.shiro.filter.JwtFilter;
+import com.liuyang19900520.shiro.filter.JwtPermFilter;
+import com.liuyang19900520.shiro.jwt.HmacRealm;
 import com.liuyang19900520.shiro.jwt.JwtRealm;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.credential.CredentialsMatcher;
-import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
+
+
+import org.apache.shiro.authc.pam.AtLeastOneSuccessfulStrategy;
+import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.cache.MemoryConstrainedCacheManager;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.DefaultSessionStorageEvaluator;
 import org.apache.shiro.mgt.DefaultSubjectDAO;
+import org.apache.shiro.realm.Realm;
 import org.apache.shiro.session.mgt.DefaultSessionManager;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
@@ -26,23 +35,37 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.web.filter.DelegatingFilterProxy;
 
 import javax.servlet.Filter;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 @Configuration
 public class ShiroConfig {
 
     /**
      * 自定义Realm
+     *
      * @return
      */
     @Bean(name = "jwtRealm")
     @DependsOn("lifecycleBeanPostProcessor")
     public JwtRealm jwtRealm() {
         JwtRealm jwtRealm = new JwtRealm();
-        // jwtRealm.setCredentialsMatcher(credentialsMatcher());
         jwtRealm.setCachingEnabled(false);
         return jwtRealm;
+    }
+
+
+    /**
+     * 自定义Realm
+     *
+     * @return
+     */
+    @Bean(name = "hmacRealm")
+    @DependsOn("lifecycleBeanPostProcessor")
+    public HmacRealm hmacRealm() {
+        HmacRealm hmacRealm = new HmacRealm();
+        hmacRealm.setCredentialsMatcher(credentialsMatcher());
+        hmacRealm.setCachingEnabled(false);
+        return hmacRealm;
     }
 
     @Bean
@@ -57,32 +80,33 @@ public class ShiroConfig {
 
     @Bean("shiroFilter")
     @DependsOn("securityManager")
-    public ShiroFilterFactoryBean shiroFilter(DefaultSecurityManager securityManager){
-        ShiroFilterFactoryBean shiroFilter  = new ShiroFilterFactoryBean();
+    public ShiroFilterFactoryBean shiroFilter(DefaultSecurityManager securityManager) {
+        ShiroFilterFactoryBean shiroFilter = new ShiroFilterFactoryBean();
         shiroFilter.setSecurityManager(securityManager);
-        // 拦截器
-        Map<String,String> filterChainDefinitionMap = new LinkedHashMap<String,String>();
 
+        // 拦截器
+        Map<String, String> filterChainDefinitionMap = new LinkedHashMap<String, String>();
         // 允许用户匿名访问/login(登录接口)
-        filterChainDefinitionMap.put("/login", "anon");
+        filterChainDefinitionMap.put("/auth/**", "hmac");
 
         // 验证码允许匿名访问
-        filterChainDefinitionMap.put("/captcha","anon");
-        filterChainDefinitionMap.put("/api-docs","anon");
-        filterChainDefinitionMap.put("/v2/api-docs","anon");
-        filterChainDefinitionMap.put("/swagger-ui.html","anon");
-        filterChainDefinitionMap.put("/webjars/**","anon");
-        filterChainDefinitionMap.put("/swagger-resources/**","anon");
-
-        filterChainDefinitionMap.put("/**", "jwt");
-
-//        filterChainDefinitionMap.put("/**","anon");
+        filterChainDefinitionMap.put("/captcha", "anon");
+        filterChainDefinitionMap.put("/api-docs", "anon");
+        filterChainDefinitionMap.put("/v2/api-docs", "anon");
+        filterChainDefinitionMap.put("/swagger-ui.html", "anon");
+        filterChainDefinitionMap.put("/webjars/**", "anon");
+        filterChainDefinitionMap.put("/swagger-resources/**", "anon");
+        filterChainDefinitionMap.put("/api/delete", "jwtPerms[api:delete]");
+//        filterChainDefinitionMap.put("/**", "perms");
 
         shiroFilter.setFilterChainDefinitionMap(filterChainDefinitionMap);
 
         Map<String, Filter> filters = new LinkedHashMap<>();
-        filters.put("jwt",new JwtAuthenticationFilter());
-        filters.put("jcaptchaValidate",new JcaptchaValidateFilter());
+        filters.put("json",new HttpServletRequestReplacedFilter());
+        filters.put("hmac", new HmacFilter());
+        filters.put("jwt", new JwtFilter());
+        filters.put("jwtPerms", new JwtPermFilter());
+        filters.put("jcaptchaValidate", new JcaptchaValidateFilter());
 
         shiroFilter.setFilters(filters);
 
@@ -91,30 +115,39 @@ public class ShiroConfig {
 
     /**
      * Subject工厂管理器
+     *
      * @return
      */
     @Bean
-    public DefaultWebSubjectFactory subjectFactory(){
+    public DefaultWebSubjectFactory subjectFactory() {
         DefaultWebSubjectFactory subjectFactory = new StatelessDefaultSubjectFactory();
         return subjectFactory;
     }
 
     /**
      * 安全管理器
+     *
      * @return
      */
     @Bean("securityManager")
-    public DefaultWebSecurityManager securityManager(){
-        DefaultWebSecurityManager securityManager =  new DefaultWebSecurityManager();
+    public DefaultWebSecurityManager securityManager() {
+        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
 
-        securityManager.setRealm(jwtRealm());
 
+        List<Realm> realms = Lists.newArrayList();
+        realms.add(hmacRealm());
+        realms.add(jwtRealm());
+
+
+        securityManager.setAuthenticator(modularRealmAuthenticator());
+        securityManager.setRealms(realms);
+//        securityManager.setRealm(jwtRealm());
         // 替换默认的DefaultSubjectFactory，用于关闭session功能
         securityManager.setSubjectFactory(subjectFactory());
         securityManager.setSessionManager(sessionManager());
 
         // 关闭session存储，禁用Session作为存储策略的实现，但它没有完全地禁用Session所以需要配合SubjectFactory中的context.setSessionCreationEnabled(false)
-        ((DefaultSessionStorageEvaluator) ((DefaultSubjectDAO)securityManager.getSubjectDAO()).getSessionStorageEvaluator()).setSessionStorageEnabled(false);
+        ((DefaultSessionStorageEvaluator) ((DefaultSubjectDAO) securityManager.getSubjectDAO()).getSessionStorageEvaluator()).setSessionStorageEnabled(false);
 
         // 用户授权/认证信息Cache, 后期可采用EhCache缓存
         // securityManager.setCacheManager(cacheManager());
@@ -123,43 +156,50 @@ public class ShiroConfig {
         return securityManager;
     }
 
+
+    @Bean
+    public ModularRealmAuthenticator modularRealmAuthenticator() {
+        ModularRealmAuthenticator modularRealmAuthenticator = new ModularRealmAuthenticator();
+        modularRealmAuthenticator.setAuthenticationStrategy(new AtLeastOneSuccessfulStrategy());
+        return modularRealmAuthenticator;
+    }
+
     /**
      * 会话管理器
+     *
      * @return
      */
-    public DefaultSessionManager sessionManager(){
-        DefaultSessionManager sessionManager =new DefaultSessionManager();
+    public DefaultSessionManager sessionManager() {
+        DefaultSessionManager sessionManager = new DefaultSessionManager();
         // 关闭session定时检查，通过setSessionValidationSchedulerEnabled禁用掉会话调度器
         sessionManager.setSessionValidationSchedulerEnabled(false);
-        return  sessionManager;
+        return sessionManager;
     }
 
     /**
      * 用户授权信息缓存
+     *
      * @return
      */
     @Bean
     public CacheManager cacheManager() {
-        // EhCacheManager cacheManager = new EhCacheManager();
-        // cacheManager.setCacheManagerConfigFile("classpath:ehcache.xml");
         return new MemoryConstrainedCacheManager();
     }
 
     /**
      * 凭证匹配器
+     *
      * @return
      */
     @Bean
-    public CredentialsMatcher credentialsMatcher(){
-        HashedCredentialsMatcher hashedCredentialsMatcher =new HashedCredentialsMatcher();
-        hashedCredentialsMatcher.setHashAlgorithmName("MD5");
-        hashedCredentialsMatcher.setHashIterations(1024);
-        hashedCredentialsMatcher.setStoredCredentialsHexEncoded(true);
+    public CredentialsMatcher credentialsMatcher() {
+        CredentialsMatcher hashedCredentialsMatcher = new CredentialsMatcher();
         return hashedCredentialsMatcher;
     }
 
     /**
      * Shiro生命周期处理器
+     *
      * @return
      */
     @Bean(name = "lifecycleBeanPostProcessor")
@@ -169,18 +209,19 @@ public class ShiroConfig {
 
     /**
      * 开启Shiro注解(如@RequiresRoles,@RequiresPermissions)
+     *
      * @return
      */
     @Bean
     @DependsOn("lifecycleBeanPostProcessor")
-    public DefaultAdvisorAutoProxyCreator advisorAutoProxyCreator(){
+    public DefaultAdvisorAutoProxyCreator advisorAutoProxyCreator() {
         DefaultAdvisorAutoProxyCreator advisorAutoProxyCreator = new DefaultAdvisorAutoProxyCreator();
         advisorAutoProxyCreator.setProxyTargetClass(true);
         return advisorAutoProxyCreator;
     }
 
     @Bean
-    public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(){
+    public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor() {
         AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
         authorizationAttributeSourceAdvisor.setSecurityManager(securityManager());
         return authorizationAttributeSourceAdvisor;
