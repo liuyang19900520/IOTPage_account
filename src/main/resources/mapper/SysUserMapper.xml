@@ -33,20 +33,22 @@
 
     </select>
 
-    <select id="listRolesByAccount" resultMap="resultRoles">
-        SELECT r.*
+    <select id="listRolesByAccount" resultType="java.lang.String">
+        SELECT r.code
         FROM sys_role r
             INNER JOIN sys_user_role ur ON r.id = ur.role_id
             INNER JOIN sys_user u ON u.id = ur.user_id
         WHERE u.user_name = #{userName}
     </select>
 
-    <select id="listPermissionsByAccount" resultMap="resultPermissions">
+    <select id="listPermissionsByAccount" resultType="java.lang.String">
         SELECT r.permission
         FROM sys_resource r
             INNER JOIN sys_role_resource rr ON r.id = rr.resource_id
             INNER JOIN sys_role role ON rr.role_id = role.id
-        WHERE role.id = #{roleId}
+            INNER JOIN sys_user_role ur ON ur.role_id = role.id
+            INNER JOIN sys_user u ON u.id = ur.user_id
+        WHERE u.user_name = #{userName}
     </select>
 
 </mapper>

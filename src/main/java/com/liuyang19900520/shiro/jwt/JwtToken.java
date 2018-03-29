@@ -13,6 +13,7 @@ public class JwtToken implements AuthenticationToken {
     private String jwt;// json web token
     private String host;// 客户端IP
 
+
     public JwtToken(String jwt, String host) {
         this.jwt = jwt;
         this.host = host;

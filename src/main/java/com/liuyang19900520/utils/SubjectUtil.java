@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 public class SubjectUtil {
 
     @Autowired
-    private TokenUtil tokenUtil;
+    private TokenUtilBK tokenUtilBK;
 
     public Integer getSubjectId() {
         String username = (String) SecurityUtils.getSubject().getPrincipal();

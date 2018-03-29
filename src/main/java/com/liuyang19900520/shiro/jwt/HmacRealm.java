@@ -1,9 +1,8 @@
 package com.liuyang19900520.shiro.jwt;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.liuyang19900520.domain.SysUser;
-import com.liuyang19900520.service.UserService;
+import com.liuyang19900520.service.AuthenticateService;
 import com.liuyang19900520.utils.CryptoUtil;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
@@ -12,17 +11,22 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 /**
  * Created by liuyang on 2018/3/16
+ *
+ * @author liuya
  */
 public class HmacRealm extends AuthorizingRealm {
 
+    private static final int EXPIRE_TIME = 600000;
+
+    /**
+     * 认证与权限服务
+     */
     @Autowired
-    private UserService userService;//账号服务(持久化服务)
+    private AuthenticateService authenticateService;
 
     /**
      * 认证
@@ -45,7 +49,8 @@ public class HmacRealm extends AuthorizingRealm {
         Long visitTimeStamp = Long.valueOf(hmacToken.getTimeStamp());
         Long nowTimeStamp = System.currentTimeMillis();
         Long jge = nowTimeStamp - visitTimeStamp;
-        if (jge > 900000000) {// 十分钟之前的时间戳，这是有效期可以双方约定由参数传过来
+        // 十分钟之前的时间戳，这是有效期可以双方约定由参数传过来
+        if (jge > EXPIRE_TIME) {
             throw new AuthenticationException("数字摘要失效！！！");
         }
         // 此处可以添加查询数据库检查账号是否存在、是否被锁定、是否被禁用等等逻辑
@@ -53,7 +58,7 @@ public class HmacRealm extends AuthorizingRealm {
         String userName = hmacToken.getClientKey();
 
         // 根据用户名查询数据库
-        SysUser user = userService.findUserByAccount(userName);
+        SysUser user = authenticateService.findUserByAccount(userName);
 
         // 用户不存在
         if (user == null) {
@@ -84,17 +89,15 @@ public class HmacRealm extends AuthorizingRealm {
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         String clientKey = (String) principals.getPrimaryPrincipal();
         SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
-        // 根据客户标识（可以是用户名、app id等等） 查询并设置角色
-//        Set<String> roles = accountProvider.loadRoles(clientKey);
-//        info.setRoles(roles);
-        // 根据客户标识（可以是用户名、app id等等） 查询并设置权限
-//        Set<String> permissions = accountProvider.loadPermissions(clientKey);
-//        info.setStringPermissions(permissions);
-        // 根据username查询角色
-        info.setRoles(Sets.newHashSet("admin", "superadmin"));
 
-        // 根据username查询权限
-        info.setStringPermissions(Sets.newHashSet("system:*"));
+        // 根据客户标识（可以是用户名、app id等等） 查询并设置角色
+        Set<String> roles = authenticateService.listRolesByAccount(clientKey);
+        info.setRoles(roles);
+
+        // 根据客户标识（可以是用户名、app id等等） 查询并设置权限
+        Set<String> permissions = authenticateService.listPermissionsByAccount(clientKey);
+        info.setStringPermissions(permissions);
+
         return info;
     }
 

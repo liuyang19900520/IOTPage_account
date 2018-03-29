@@ -8,6 +8,7 @@ import org.apache.shiro.authc.credential.SimpleCredentialsMatcher;
 
 /**
  * Created by liuyang on 2018/3/16
+ * @author liuya
  */
 public class CredentialsMatcher extends SimpleCredentialsMatcher {
 
@@ -15,12 +16,12 @@ public class CredentialsMatcher extends SimpleCredentialsMatcher {
     @Override
     public boolean doCredentialsMatch(AuthenticationToken token, AuthenticationInfo info) {
         // 向下转型
-        HmacToken usertoken = (HmacToken) token;
+        HmacToken userToken = (HmacToken) token;
 
         // 将用户输入的原始密码加密
         // 注意token.getPassword()拿到的是一个char[]，不能直接用toString()，它底层实现不是我们想的直接字符串，只能强转
         // 用户名做为salt
-            Object tokenCredentials = Encrypt.md5(usertoken.getCredentials().toString(), usertoken.getPrincipal().toString());
+            Object tokenCredentials = Encrypt.md5(userToken.getCredentials().toString(), userToken.getPrincipal().toString());
 
         //取得数据库中的密码数据
         Object accountCredentials = getCredentials(info);

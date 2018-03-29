@@ -21,6 +21,10 @@ public class CryptoUtil {
     private static String APP_KEY;
     private static final String SECRET_KEY_JWT = "*(-=4eklfasdfarerf41585fdasf";
 
+    public static final String ACCESS_TOKEN_TYPE = "1";
+    public static final String REFRESH_TOKEN_TYPE = "2";
+
+
     @Value("${appkey}")
     public void setDatabase(String appkey) {
         APP_KEY = appkey;
@@ -44,7 +48,7 @@ public class CryptoUtil {
      * @return json web token
      */
     public static String issueJwt(String id, String subject, String roles
-            , String permissions, Date issuedAt) {
+            , String permissions, Date issuedAt, String type) {
 
         // 秘钥
         byte[] secretKeyBytes = DatatypeConverter.parseBase64Binary(SECRET_KEY_JWT);
@@ -56,9 +60,18 @@ public class CryptoUtil {
         jwt.setIssuer("token-server");
         // 签发时间
         jwt.setIssuedAt(issuedAt);
+
         // 有效时间
-        Date expiration = new Date(issuedAt.getTime() + 6000000000000000000L);
-        jwt.setExpiration(expiration);
+        if (ACCESS_TOKEN_TYPE.equals(type)) {
+            Date expiration = new Date(issuedAt.getTime() + 30 * 60 * 1000L);
+            jwt.setExpiration(expiration);
+        }
+
+        if (REFRESH_TOKEN_TYPE.equals(type)) {
+            Date expiration = new Date(issuedAt.getTime() + 7 * 24 * 60 * 60 * 1000L);
+            jwt.setExpiration(expiration);
+        }
+
 
         // 访问主张-角色
         if (null != roles && !"".equals(roles)) {
@@ -78,10 +91,18 @@ public class CryptoUtil {
                 .setSigningKey(SECRET_KEY_JWT).parse(token);
 
         Claims claims = (Claims) parse.getBody();
-        String verifyToken = issueJwt(claims.getId(), claims.getSubject(), String.valueOf(claims.get("roles")), String.valueOf(claims.get("perms")), claims.getIssuedAt());
+        String verifyToken = issueJwt(claims.getId(), claims.getSubject(), String.valueOf(claims.get("roles")), String.valueOf(claims.get("perms")), claims.getIssuedAt(), ACCESS_TOKEN_TYPE);
 
         return verifyToken;
     }
+
+
+    public static Claims parserToken(String token) {
+
+        return (Claims) Jwts.parser().setSigningKey(SECRET_KEY_JWT).parse(token).getBody();
+
+    }
+
 
     /**
      * 生成HMAC摘要

@@ -1,7 +1,6 @@
 package com.liuyang19900520.config;
 
 import com.liuyang19900520.commons.interceptor.HttpServletRequestReplacedFilter;
-import org.apache.catalina.filters.RemoteIpFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

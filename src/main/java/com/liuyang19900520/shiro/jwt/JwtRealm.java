@@ -10,8 +10,11 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerProperties;
+import org.springframework.data.redis.core.RedisTemplate;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,6 +22,10 @@ import java.util.Set;
  * Created by liuyang on 2018/3/18
  */
 public class JwtRealm extends AuthorizingRealm {
+
+    @Autowired
+    RedisTemplate redisTemplate;
+
     @Override
     public boolean supports(AuthenticationToken token) {
         //表示此Realm只支持JwtToken类型
@@ -43,7 +50,19 @@ public class JwtRealm extends AuthorizingRealm {
             // 预先解析Payload
             // 没有做任何的签名校验
             verifyToken = CryptoUtil.verifyToken(jwt);
+            if (jwt.equals(verifyToken)) {
+                Claims claims = CryptoUtil.parserToken(jwt);
+                Date expiration = claims.getExpiration();
+                if (expiration.getTime() < System.currentTimeMillis()) {
+                    throw new AuthenticationException("jwt过期");
+                }
 
+                if (redisTemplate.boundValueOps(claims.getSubject()).get() != null) {
+                    throw new AuthenticationException("jwt过期");
+                }
+            } else {
+                throw new AuthenticationException("jwt无效");
+            }
 
         } catch (MalformedJwtException e) {
             throw new AuthenticationException("jwt格式错误");

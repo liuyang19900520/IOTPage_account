@@ -2,62 +2,37 @@ package com.liuyang19900520.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.code.kaptcha.impl.DefaultKaptcha;
-import com.google.common.collect.ImmutableMap;
 import com.liuyang19900520.commons.pojo.Messages;
 import com.liuyang19900520.commons.pojo.ResultVo;
 import com.liuyang19900520.shiro.LoginUser;
-import com.liuyang19900520.utils.TokenUtil;
+import com.liuyang19900520.utils.TokenUtilBK;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mobile.device.Device;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.imageio.ImageIO;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 @RestController
 public class LoginController {
 
     @Autowired
-    private TokenUtil tokenUtil;
+    private TokenUtilBK tokenUtilBK;
 
     @Autowired
     private DefaultKaptcha captchaProducer;
 
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
 
-    @GetMapping(value = "/captcha")
-    public Map<String, String> captcha() {
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            String capText = captchaProducer.createText();
-            String uuid = UUID.randomUUID().toString();
-            redisTemplate.boundValueOps(uuid).set(capText, 60, TimeUnit.SECONDS);
-            BufferedImage bi = captchaProducer.createImage(capText);
-            ImageIO.write(bi, "png", baos);
-            String imgBase64 = Base64.encodeBase64String(baos.toByteArray());
-            return ImmutableMap.of(uuid, "data:image/jpeg;base64," + imgBase64);
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
 
     @PostMapping("/test")
     public String a(Device device) {
-
-
 
 
 
@@ -100,7 +75,7 @@ public class LoginController {
 
 
             // 验证用户名密码成功后生成token
-            String token = tokenUtil.generateToken(username, device);
+            String token = tokenUtilBK.generateToken(username, device);
 
             // 将token写出到cookie
             Cookie cookie = new Cookie("token", token);
@@ -185,7 +160,7 @@ public class LoginController {
     @PostMapping("/token/refresh")
     public Object refreshToken(@CookieValue(value = "token") String token) {
         JSONObject jsonObject = new JSONObject();
-        String newToken = tokenUtil.refreshToken(token);
+        String newToken = tokenUtilBK.refreshToken(token);
         jsonObject.put("code", 200);
         jsonObject.put("msg", "success");
         jsonObject.put("token", newToken);

@@ -1,6 +1,7 @@
 package com.liuyang19900520.shiro.filter;
 
 import com.liuyang19900520.shiro.jwt.JwtToken;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -20,11 +21,8 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author liuya
  */
+@Slf4j
 public class JwtFilter extends AccessControlFilter {
-
-    private static final Logger log = LoggerFactory.getLogger(AccessControlFilter.class);
-
-    public static final String DEFAULT_JWT_PARAM = "token";
 
     @Override
     protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
