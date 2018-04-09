@@ -57,8 +57,9 @@ public class HmacFilter extends AccessControlFilter {
                 Subject subject = getSubject(request, response);
                 //认证
                 subject.login(token);
-                //认证成功，过滤器链继续
-                return true;
+                if (subject.isAuthenticated()) {
+                    return true;
+                }
             } catch (UnknownAccountException exception) {
                 exception.printStackTrace();
                 log.info("账号不存在");
@@ -108,10 +109,12 @@ public class HmacFilter extends AccessControlFilter {
         String clientKey = loginUser.getUsername();
         String timeStamp = req.getHeader("Date");
         String digest = req.getHeader("Authorization");
+        String jwt = req.getHeader("token");
         return (request instanceof HttpServletRequest)
                 && StringUtils.isNotBlank(clientKey)
                 && StringUtils.isNotBlank(timeStamp)
-                && StringUtils.isNotBlank(digest);
+                && StringUtils.isNotBlank(digest)
+                && StringUtils.isBlank(jwt);
     }
 
 }

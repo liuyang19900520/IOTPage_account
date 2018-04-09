@@ -3,6 +3,7 @@ package com.liuyang19900520.config;
 import com.google.common.collect.Lists;
 import com.liuyang19900520.commons.interceptor.HttpServletRequestReplacedFilter;
 import com.liuyang19900520.shiro.CredentialsMatcher;
+import com.liuyang19900520.shiro.ModularRealmAuthenticator;
 import com.liuyang19900520.shiro.filter.HmacFilter;
 import com.liuyang19900520.shiro.filter.JcaptchaValidateFilter;
 import com.liuyang19900520.shiro.StatelessDefaultSubjectFactory;
@@ -14,7 +15,7 @@ import org.apache.shiro.SecurityUtils;
 
 
 import org.apache.shiro.authc.pam.AtLeastOneSuccessfulStrategy;
-import org.apache.shiro.authc.pam.ModularRealmAuthenticator;
+
 import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.cache.MemoryConstrainedCacheManager;
 import org.apache.shiro.mgt.DefaultSecurityManager;
@@ -87,7 +88,7 @@ public class ShiroConfig {
         // 拦截器
         Map<String, String> filterChainDefinitionMap = new LinkedHashMap<String, String>();
         // 允许用户匿名访问/login(登录接口)
-        filterChainDefinitionMap.put("/auth/**", "hmac");
+        filterChainDefinitionMap.put("/auth/**", "json,hmac");
 
         // 验证码允许匿名访问
         filterChainDefinitionMap.put("/captcha", "anon");
@@ -96,13 +97,14 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/swagger-ui.html", "anon");
         filterChainDefinitionMap.put("/webjars/**", "anon");
         filterChainDefinitionMap.put("/swagger-resources/**", "anon");
-        filterChainDefinitionMap.put("/api/delete", "jwtPerms[api:delete]");
+        filterChainDefinitionMap.put("/check/jwt", "jwtPerms");
+        filterChainDefinitionMap.put("/check/admin", "jwtPerms[system:*]");
 //        filterChainDefinitionMap.put("/**", "perms");
 
         shiroFilter.setFilterChainDefinitionMap(filterChainDefinitionMap);
 
         Map<String, Filter> filters = new LinkedHashMap<>();
-        filters.put("json",new HttpServletRequestReplacedFilter());
+        filters.put("json", new HttpServletRequestReplacedFilter());
         filters.put("hmac", new HmacFilter());
         filters.put("jwt", new JwtFilter());
         filters.put("jwtPerms", new JwtPermFilter());
@@ -220,10 +222,13 @@ public class ShiroConfig {
         return advisorAutoProxyCreator;
     }
 
+
     @Bean
     public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor() {
         AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
         authorizationAttributeSourceAdvisor.setSecurityManager(securityManager());
         return authorizationAttributeSourceAdvisor;
     }
+
+
 }

@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.mobile.device.Device;
 import org.springframework.web.bind.annotation.*;
 
 import javax.imageio.ImageIO;
@@ -67,7 +68,7 @@ public class AuthenticateController {
      * @return
      */
     @PostMapping("/login")
-    public Object applyToken(@RequestBody LoginUser loginUser) {
+    public Object applyToken(@RequestBody LoginUser loginUser, Device device) {
 
         Set<String> roles = authenticateService.listRolesByAccount(loginUser.getUsername());
         Set<String> permissions = authenticateService.listPermissionsByAccount(loginUser.getUsername());

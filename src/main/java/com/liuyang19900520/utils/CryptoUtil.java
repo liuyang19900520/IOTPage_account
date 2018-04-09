@@ -1,6 +1,8 @@
 package com.liuyang19900520.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.impl.compression.DefaultCompressionCodecResolver;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +13,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.util.Date;
+import java.util.Set;
 
 /**
  * Created by liuyang on 2018/3/17
@@ -103,6 +106,28 @@ public class CryptoUtil {
 
     }
 
+    public static Set<String> getPerms(String token) {
+        Claims claims = parserToken(token);
+
+        String permsStr = (String) claims.get("perms");
+
+        Set<String> perms = split(permsStr);
+
+        return perms;
+
+    }
+
+    public static Set<String> getRoles(String token) {
+        Claims claims = parserToken(token);
+
+        String permsStr = (String) claims.get("roles");
+
+        Set<String> perms = split(permsStr);
+
+        return perms;
+
+    }
+
 
     /**
      * 生成HMAC摘要
@@ -130,7 +155,7 @@ public class CryptoUtil {
      * @param bytes 字节数组
      * @return 字符串
      */
-    private static String byte2HexStr(byte[] bytes) {
+    public static String byte2HexStr(byte[] bytes) {
         StringBuilder hs = new StringBuilder();
         String stmp;
         for (int n = 0; bytes != null && n < bytes.length; n++) {
@@ -141,6 +166,29 @@ public class CryptoUtil {
             hs.append(stmp);
         }
         return hs.toString().toUpperCase();
+    }
+
+
+    /**
+     * 分割字符串进SET
+     */
+    public static Set<String> split(String str) {
+        return split(str, ",");
+    }
+
+    /**
+     * 分割字符串进SET
+     */
+    public static Set<String> split(String str, String separator) {
+
+        Set<String> set = Sets.newLinkedHashSet();
+        if (Strings.isNullOrEmpty(str)) {
+            return set;
+        }
+        for (String s : str.split(separator)) {
+            set.add(s);
+        }
+        return set;
     }
 
 

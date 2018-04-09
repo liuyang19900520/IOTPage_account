@@ -87,24 +87,48 @@ public class HmacRealm extends AuthorizingRealm {
      */
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
-        String clientKey = (String) principals.getPrimaryPrincipal();
-        SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
+        String payload = (String) principals.getPrimaryPrincipal();
+        if (payload.startsWith("hmac:") && payload.charAt(5) == '{'
+                && payload.charAt(payload.length() - 1) == '}') {
+            String appId = payload.substring(6,payload.length() - 1);
+            SimpleAuthorizationInfo info =  new SimpleAuthorizationInfo();
+            Set<String> roles = this.authenticateService.listRolesByAccount(appId);
+            Set<String> permissions = this.authenticateService.listPermissionsByAccount(appId);
+            if(null!=roles&&!roles.isEmpty()) {
+                info.setRoles(roles);
+            }
+            if(null!=permissions&&!permissions.isEmpty()) {
+                info.setStringPermissions(permissions);
+            }
+            return info;
+        }
+//        String clientKey = (String) principals.getPrimaryPrincipal();
+//        SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
+//
+//        // 根据客户标识（可以是用户名、app id等等） 查询并设置角色
+//        Set<String> roles = authenticateService.listRolesByAccount(clientKey);
+//        info.setRoles(roles);
+//
+//        // 根据客户标识（可以是用户名、app id等等） 查询并设置权限
+//        Set<String> permissions = authenticateService.listPermissionsByAccount(clientKey);
+//        info.setStringPermissions(permissions);
 
-        // 根据客户标识（可以是用户名、app id等等） 查询并设置角色
-        Set<String> roles = authenticateService.listRolesByAccount(clientKey);
-        info.setRoles(roles);
-
-        // 根据客户标识（可以是用户名、app id等等） 查询并设置权限
-        Set<String> permissions = authenticateService.listPermissionsByAccount(clientKey);
-        info.setStringPermissions(permissions);
-
-        return info;
+        return null;
     }
 
     @Override
     public boolean supports(AuthenticationToken token) {
         //表示此Realm只支持JwtToken类型
         return token instanceof HmacToken;
+    }
+
+    @Override
+    public void clearCachedAuthorizationInfo(PrincipalCollection principals) {
+        super.clearCachedAuthorizationInfo(principals);
+    }
+
+    public void clearAllCachedAuthorizationInfo() {
+        getAuthorizationCache().clear();
     }
 
 }

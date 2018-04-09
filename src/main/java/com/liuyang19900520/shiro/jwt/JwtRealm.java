@@ -1,5 +1,6 @@
 package com.liuyang19900520.shiro.jwt;
 
+import com.google.common.collect.Sets;
 import com.liuyang19900520.utils.CryptoUtil;
 import io.jsonwebtoken.*;
 import org.apache.shiro.authc.AuthenticationException;
@@ -78,25 +79,37 @@ public class JwtRealm extends AuthorizingRealm {
      */
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
+        SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
         String payload = (String) principals.getPrimaryPrincipal();
-//        // likely to be json, parse it:
+
+        Set<String> perms = CryptoUtil.getPerms(payload);
+        info.setStringPermissions(perms);
+        return info;
+
+        // likely to be json, parse it:
 //        if (payload.startsWith("jwt:") && payload.charAt(4) == '{'
 //                && payload.charAt(payload.length() - 1) == '}') {
 //
-//            Map<String, Object> payloadMap = CryptoUtil.readValue(payload.substring(4));
-//            Set<String> roles = CryptoUtil.split((String) payloadMap.get("roles"));
-//            Set<String> permissions = CryptoUtil.split((String) payloadMap.get("perms"));
-//            SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
-//            if (null != roles && !roles.isEmpty()) {
-//                info.setRoles(roles);
-//            }
-//            if (null != permissions && !permissions.isEmpty()) {
-//                info.setStringPermissions(permissions);
-//            }
+//
+//            System.out.println(payload);
+//
+////            Map<String, Object> payloadMap = CryptoUtil.readValue(payload.substring(4));
+////            Set<String> roles = CryptoUtil.split((String) payloadMap.get("roles"));
+////            Set<String> permissions = CryptoUtil.split((String) payloadMap.get("perms"));
+////            SimpleAuthorizationInfo info = new SimpleAuthorizationInfo();
+////            if (null != roles && !roles.isEmpty()) {
+////                info.setRoles(roles);
+////            }
+////            if (null != permissions && !permissions.isEmpty()) {
+////                info.setStringPermissions(permissions);
+////            }
+//            Set<String> permissions = Sets.newHashSet();
+//            permissions.add("system:*");
+//            info.setStringPermissions(permissions);
 //            return info;
-//        }
-        return null;
-    }
+        }
+//        return null;
+//    }
 
 
 }
