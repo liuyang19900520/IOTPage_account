@@ -1,6 +1,6 @@
-package com.liuyang19900520.shiro.jwt;
+package com.liuyang19900520.shiro.realm;
 
-import com.google.common.collect.Sets;
+import com.liuyang19900520.shiro.token.JwtToken;
 import com.liuyang19900520.utils.CryptoUtil;
 import io.jsonwebtoken.*;
 import org.apache.shiro.authc.AuthenticationException;
@@ -12,11 +12,9 @@ import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.ResourceServerProperties;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.Date;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -84,10 +82,13 @@ public class JwtRealm extends AuthorizingRealm {
 
         Set<String> perms = CryptoUtil.getPerms(payload);
         info.setStringPermissions(perms);
+
+        Set<String> roles = CryptoUtil.getRoles(payload);
+        info.setRoles(roles);
         return info;
 
         // likely to be json, parse it:
-//        if (payload.startsWith("jwt:") && payload.charAt(4) == '{'
+//        if (payload.startsWith("token:") && payload.charAt(4) == '{'
 //                && payload.charAt(payload.length() - 1) == '}') {
 //
 //
@@ -107,7 +108,7 @@ public class JwtRealm extends AuthorizingRealm {
 //            permissions.add("system:*");
 //            info.setStringPermissions(permissions);
 //            return info;
-        }
+    }
 //        return null;
 //    }
 

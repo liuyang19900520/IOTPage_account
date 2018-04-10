@@ -1,11 +1,9 @@
 package com.liuyang19900520.shiro.filter;
 
-import com.liuyang19900520.shiro.jwt.JwtToken;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.subject.Subject;
-import org.apache.shiro.web.util.WebUtils;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -16,7 +14,7 @@ import javax.servlet.ServletResponse;
  * @author liuya
  */
 @Slf4j
-public class JwtPermFilter extends JwtFilter {
+public class JwtPermAuthFilter extends StatelessFilter {
     @Override
     protected boolean isAccessAllowed(ServletRequest request, ServletResponse response,
                                       Object mappedValue) throws Exception {
@@ -26,7 +24,7 @@ public class JwtPermFilter extends JwtFilter {
 
         if ((null == subject || !subject.isAuthenticated()) && isJwtSubmission(request)) {
 
-            AuthenticationToken token = createToken(request, response);
+            AuthenticationToken token = createJwtToken(request, response);
             try {
                 subject = getSubject(request, response);
                 subject.login(token);

@@ -1,4 +1,4 @@
-package com.liuyang19900520.shiro.jwt;
+package com.liuyang19900520.shiro.token;
 
 import lombok.Data;
 import org.apache.shiro.authc.AuthenticationToken;

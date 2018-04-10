@@ -4,13 +4,10 @@ import com.google.common.collect.Lists;
 import com.liuyang19900520.commons.interceptor.HttpServletRequestReplacedFilter;
 import com.liuyang19900520.shiro.CredentialsMatcher;
 import com.liuyang19900520.shiro.ModularRealmAuthenticator;
-import com.liuyang19900520.shiro.filter.HmacFilter;
-import com.liuyang19900520.shiro.filter.JcaptchaValidateFilter;
+import com.liuyang19900520.shiro.filter.*;
 import com.liuyang19900520.shiro.StatelessDefaultSubjectFactory;
-import com.liuyang19900520.shiro.filter.JwtFilter;
-import com.liuyang19900520.shiro.filter.JwtPermFilter;
-import com.liuyang19900520.shiro.jwt.HmacRealm;
-import com.liuyang19900520.shiro.jwt.JwtRealm;
+import com.liuyang19900520.shiro.realm.HmacRealm;
+import com.liuyang19900520.shiro.realm.JwtRealm;
 import org.apache.shiro.SecurityUtils;
 
 
@@ -38,6 +35,9 @@ import org.springframework.web.filter.DelegatingFilterProxy;
 import javax.servlet.Filter;
 import java.util.*;
 
+/**
+ * @author liuya
+ */
 @Configuration
 public class ShiroConfig {
 
@@ -99,15 +99,16 @@ public class ShiroConfig {
         filterChainDefinitionMap.put("/swagger-resources/**", "anon");
         filterChainDefinitionMap.put("/check/jwt", "jwtPerms");
         filterChainDefinitionMap.put("/check/admin", "jwtPerms[system:*]");
-//        filterChainDefinitionMap.put("/**", "perms");
+        filterChainDefinitionMap.put("/check/roles/super", "jwtRoles[superManager]");
 
         shiroFilter.setFilterChainDefinitionMap(filterChainDefinitionMap);
 
         Map<String, Filter> filters = new LinkedHashMap<>();
         filters.put("json", new HttpServletRequestReplacedFilter());
         filters.put("hmac", new HmacFilter());
-        filters.put("jwt", new JwtFilter());
-        filters.put("jwtPerms", new JwtPermFilter());
+        filters.put("jwt", new JwtAuthFilter());
+        filters.put("jwtPerms", new JwtPermAuthFilter());
+        filters.put("jwtRoles", new JwtRoleAuthFilter());
         filters.put("jcaptchaValidate", new JcaptchaValidateFilter());
 
         shiroFilter.setFilters(filters);

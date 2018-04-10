@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
 public class TokenUtilBK {
 
     static final String CLAIM_KEY_USERNAME = "sub";
@@ -22,10 +21,10 @@ public class TokenUtilBK {
     private static final String AUDIENCE_MOBILE = "mobile";
     private static final String AUDIENCE_TABLET = "tablet";
 
-    @Value("${jwt.token.secret}")
+    @Value("${token.token.secret}")
     private String secret;
 
-    @Value("${jwt.token.expiration}")
+    @Value("${token.token.expiration}")
     private Long expiration;
 
 

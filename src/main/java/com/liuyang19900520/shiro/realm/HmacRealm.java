@@ -1,8 +1,8 @@
-package com.liuyang19900520.shiro.jwt;
+package com.liuyang19900520.shiro.realm;
 
-import com.google.common.collect.Sets;
 import com.liuyang19900520.domain.SysUser;
 import com.liuyang19900520.service.AuthenticateService;
+import com.liuyang19900520.shiro.token.HmacToken;
 import com.liuyang19900520.utils.CryptoUtil;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;

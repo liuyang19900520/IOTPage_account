@@ -25,6 +25,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Created by liuyang on 2018/3/16
@@ -73,11 +75,21 @@ public class AuthenticateController {
         Set<String> roles = authenticateService.listRolesByAccount(loginUser.getUsername());
         Set<String> permissions = authenticateService.listPermissionsByAccount(loginUser.getUsername());
 
+        StringBuffer strRoles = new StringBuffer();
+        StringBuffer strPerms = new StringBuffer();
+
+        permissions.stream().forEachOrdered(s -> strPerms.append(s).append(","));
+        String permsJwt = strPerms.substring(0, strPerms.length() - 1);
+
+
+        roles.stream().forEachOrdered(s -> strRoles.append(s).append(","));
+        String rolesJwt = strRoles.substring(0, strRoles.length() - 1);
+
         String jwt = CryptoUtil.issueJwt(UUID.randomUUID().toString(), loginUser.getUsername(),
-                roles.toString(), permissions.toString(), new Date(), CryptoUtil.ACCESS_TOKEN_TYPE);
+                rolesJwt, permsJwt, new Date(), CryptoUtil.ACCESS_TOKEN_TYPE);
 
         String refresh = CryptoUtil.issueJwt(UUID.randomUUID().toString(), loginUser.getUsername(),
-                roles.toString(), permissions.toString(), new Date(), CryptoUtil.REFRESH_TOKEN_TYPE);
+                rolesJwt,permsJwt, new Date(), CryptoUtil.REFRESH_TOKEN_TYPE);
 
         HashMap<String, String> tokens = Maps.newHashMap();
         tokens.put("token", jwt);

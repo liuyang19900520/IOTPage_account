@@ -54,6 +54,8 @@ logging:
   path: C:\\Users\\liuyang19900520\\Desktop\\logs
 
 appkey: E2B7B173A8801CD1455878A1383B2337
+server:
+  port: 8085
 
 
 
