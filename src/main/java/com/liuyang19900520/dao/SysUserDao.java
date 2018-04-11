@@ -6,6 +6,7 @@ import com.liuyang19900520.domain.SysUser;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by liuyang on 2018/3/15
@@ -14,11 +15,11 @@ import java.util.List;
  */
 public interface SysUserDao {
 
-    SysUser selectByAccount(@Param("userName") String userNmae);
+    SysUser selectByAccount(@Param("userName") String userName);
 
-    List<SysRole> listRolesByAccount(@Param("userName") String userNmae);
+    Set<String> listRolesByAccount(@Param("userName") String userName);
 
-    List<SysResource> listPermissionsByAccount(@Param("roleId") String roleId);
+    Set<String> listPermissionsByAccount(@Param("userName") String userName);
 
 
 }

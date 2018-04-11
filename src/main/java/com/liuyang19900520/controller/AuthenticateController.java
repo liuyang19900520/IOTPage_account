@@ -1,28 +1,32 @@
 package com.liuyang19900520.controller;
 
+import com.google.code.kaptcha.impl.DefaultKaptcha;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.liuyang19900520.commons.pojo.Messages;
 import com.liuyang19900520.commons.pojo.ResultVo;
 import com.liuyang19900520.domain.SysResource;
 import com.liuyang19900520.domain.SysRole;
-import com.liuyang19900520.service.UserService;
+import com.liuyang19900520.service.AuthenticateService;
 import com.liuyang19900520.shiro.LoginUser;
 import com.liuyang19900520.utils.CryptoUtil;
-import com.liuyang19900520.utils.SubjectUtil;
-import io.jsonwebtoken.CompressionCodecs;
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.lang.Strings;
+import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.subject.PrincipalCollection;
+import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.mobile.device.Device;
 import org.springframework.web.bind.annotation.*;
 
-import javax.xml.bind.DatatypeConverter;
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Created by liuyang on 2018/3/16
@@ -35,33 +39,72 @@ import java.util.*;
 public class AuthenticateController {
 
     @Autowired
-    UserService userService;
+    AuthenticateService authenticateService;
 
+    @Autowired
+    private DefaultKaptcha captchaProducer;
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @GetMapping(value = "/captcha")
+    public Map<String, String> captcha() {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            String capText = captchaProducer.createText();
+            String uuid = UUID.randomUUID().toString();
+            redisTemplate.boundValueOps(uuid).set(capText, 60, TimeUnit.SECONDS);
+            BufferedImage bi = captchaProducer.createImage(capText);
+            ImageIO.write(bi, "png", baos);
+            String imgBase64 = Base64.encodeBase64String(baos.toByteArray());
+            return ImmutableMap.of(uuid, "data:image/jpeg;base64," + imgBase64);
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+
+    /**
+     * 登录
+     *
+     * @param loginUser
+     * @return
+     */
     @PostMapping("/login")
-    public Object applyToken(@RequestBody LoginUser loginUser) {
+    public Object applyToken(@RequestBody LoginUser loginUser, Device device) {
 
-        List<SysRole> sysRoles = userService.listRolesByAccount(loginUser.getUsername());
-        List<SysResource> sysResources = userService.listpermissionsByAccount(loginUser.getUsername());
+        Set<String> roles = authenticateService.listRolesByAccount(loginUser.getUsername());
+        Set<String> permissions = authenticateService.listPermissionsByAccount(loginUser.getUsername());
 
-        StringBuffer roles = new StringBuffer();
-        StringBuffer permissions = new StringBuffer();
-        for (int i = 0; i < sysRoles.size(); i++) {
-            roles.append(sysRoles.get(i).getCode());
-            if (i != sysRoles.size() - 1) {
-                roles.append(",");
-            }
-        }
-        for (int i = 0; i < sysResources.size(); i++) {
-            permissions.append(sysResources.get(i).getPermission());
-            if (i != sysResources.size() - 1) {
-                permissions.append(",");
-            }
-        }
+        StringBuffer strRoles = new StringBuffer();
+        StringBuffer strPerms = new StringBuffer();
+
+        permissions.stream().forEachOrdered(s -> strPerms.append(s).append(","));
+        String permsJwt = strPerms.substring(0, strPerms.length() - 1);
+
+
+        roles.stream().forEachOrdered(s -> strRoles.append(s).append(","));
+        String rolesJwt = strRoles.substring(0, strRoles.length() - 1);
 
         String jwt = CryptoUtil.issueJwt(UUID.randomUUID().toString(), loginUser.getUsername(),
-                roles.toString(), permissions.toString(), new Date());
+                rolesJwt, permsJwt, new Date(), CryptoUtil.ACCESS_TOKEN_TYPE);
 
-        return ResultVo.success(Messages.OK, jwt);
+        String refresh = CryptoUtil.issueJwt(UUID.randomUUID().toString(), loginUser.getUsername(),
+                rolesJwt,permsJwt, new Date(), CryptoUtil.REFRESH_TOKEN_TYPE);
+
+        HashMap<String, String> tokens = Maps.newHashMap();
+        tokens.put("token", jwt);
+        tokens.put("refreshToken", refresh);
+
+        return ResultVo.success(Messages.OK, tokens);
+    }
+
+
+    @PostMapping
+    public Object logout(HttpServletRequest request) {
+        String token = request.getHeader("token");
+        Claims claims = CryptoUtil.parserToken(token);
+        redisTemplate.boundValueOps(claims.getSubject()).set(token, 30 * 60 * 1000L);
+        return ResultVo.success(Messages.OK, null);
     }
 
 

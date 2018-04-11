@@ -1,8 +1,7 @@
-package com.liuyang19900520.shiro.jwt;
+package com.liuyang19900520.shiro.token;
 
 import com.liuyang19900520.shiro.LoginUser;
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.shiro.authc.AuthenticationToken;
 
 import java.util.Map;

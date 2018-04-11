@@ -33,7 +33,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-           <version>1.16.20</version>
+            <version>1.16.20</version>
         </dependency>
 
         <dependency>
@@ -101,6 +101,12 @@
             <groupId>org.apache.shiro</groupId>
             <artifactId>shiro-ehcache</artifactId>
             <version>1.2.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.freefair.okhttp-spring-boot</groupId>
+            <artifactId>okhttp3-spring-boot-starter</artifactId>
+            <version>2.0.0</version>
         </dependency>
 
         <!--
@@ -188,6 +194,14 @@
             </plugin>
         </plugins>
     </build>
+
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+
+    </repositories>
 
 
 </project>

@@ -1,4 +1,4 @@
-package com.liuyang19900520.shiro.jwt;
+package com.liuyang19900520.shiro.token;
 
 import lombok.Data;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -12,6 +12,7 @@ public class JwtToken implements AuthenticationToken {
 
     private String jwt;// json web token
     private String host;// 客户端IP
+
 
     public JwtToken(String jwt, String host) {
         this.jwt = jwt;

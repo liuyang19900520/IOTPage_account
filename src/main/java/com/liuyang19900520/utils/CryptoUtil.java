@@ -1,6 +1,8 @@
 package com.liuyang19900520.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.impl.compression.DefaultCompressionCodecResolver;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +13,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.util.Date;
+import java.util.Set;
 
 /**
  * Created by liuyang on 2018/3/17
@@ -20,6 +23,10 @@ public class CryptoUtil {
 
     private static String APP_KEY;
     private static final String SECRET_KEY_JWT = "*(-=4eklfasdfarerf41585fdasf";
+
+    public static final String ACCESS_TOKEN_TYPE = "1";
+    public static final String REFRESH_TOKEN_TYPE = "2";
+
 
     @Value("${appkey}")
     public void setDatabase(String appkey) {
@@ -44,7 +51,7 @@ public class CryptoUtil {
      * @return json web token
      */
     public static String issueJwt(String id, String subject, String roles
-            , String permissions, Date issuedAt) {
+            , String permissions, Date issuedAt, String type) {
 
         // 秘钥
         byte[] secretKeyBytes = DatatypeConverter.parseBase64Binary(SECRET_KEY_JWT);
@@ -56,9 +63,18 @@ public class CryptoUtil {
         jwt.setIssuer("token-server");
         // 签发时间
         jwt.setIssuedAt(issuedAt);
+
         // 有效时间
-        Date expiration = new Date(issuedAt.getTime() + 6000000000000000000L);
-        jwt.setExpiration(expiration);
+        if (ACCESS_TOKEN_TYPE.equals(type)) {
+            Date expiration = new Date(issuedAt.getTime() + 30 * 60 * 1000L);
+            jwt.setExpiration(expiration);
+        }
+
+        if (REFRESH_TOKEN_TYPE.equals(type)) {
+            Date expiration = new Date(issuedAt.getTime() + 7 * 24 * 60 * 60 * 1000L);
+            jwt.setExpiration(expiration);
+        }
+
 
         // 访问主张-角色
         if (null != roles && !"".equals(roles)) {
@@ -78,10 +94,40 @@ public class CryptoUtil {
                 .setSigningKey(SECRET_KEY_JWT).parse(token);
 
         Claims claims = (Claims) parse.getBody();
-        String verifyToken = issueJwt(claims.getId(), claims.getSubject(), String.valueOf(claims.get("roles")), String.valueOf(claims.get("perms")), claims.getIssuedAt());
+        String verifyToken = issueJwt(claims.getId(), claims.getSubject(), String.valueOf(claims.get("roles")), String.valueOf(claims.get("perms")), claims.getIssuedAt(), ACCESS_TOKEN_TYPE);
 
         return verifyToken;
     }
+
+
+    public static Claims parserToken(String token) {
+
+        return (Claims) Jwts.parser().setSigningKey(SECRET_KEY_JWT).parse(token).getBody();
+
+    }
+
+    public static Set<String> getPerms(String token) {
+        Claims claims = parserToken(token);
+
+        String permsStr = (String) claims.get("perms");
+
+        Set<String> perms = split(permsStr);
+
+        return perms;
+
+    }
+
+    public static Set<String> getRoles(String token) {
+        Claims claims = parserToken(token);
+
+        String permsStr = (String) claims.get("roles");
+
+        Set<String> perms = split(permsStr);
+
+        return perms;
+
+    }
+
 
     /**
      * 生成HMAC摘要
@@ -109,7 +155,7 @@ public class CryptoUtil {
      * @param bytes 字节数组
      * @return 字符串
      */
-    private static String byte2HexStr(byte[] bytes) {
+    public static String byte2HexStr(byte[] bytes) {
         StringBuilder hs = new StringBuilder();
         String stmp;
         for (int n = 0; bytes != null && n < bytes.length; n++) {
@@ -120,6 +166,29 @@ public class CryptoUtil {
             hs.append(stmp);
         }
         return hs.toString().toUpperCase();
+    }
+
+
+    /**
+     * 分割字符串进SET
+     */
+    public static Set<String> split(String str) {
+        return split(str, ",");
+    }
+
+    /**
+     * 分割字符串进SET
+     */
+    public static Set<String> split(String str, String separator) {
+
+        Set<String> set = Sets.newLinkedHashSet();
+        if (Strings.isNullOrEmpty(str)) {
+            return set;
+        }
+        for (String s : str.split(separator)) {
+            set.add(s);
+        }
+        return set;
     }
 
 

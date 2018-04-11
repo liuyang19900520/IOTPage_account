@@ -1,6 +1,6 @@
 package com.liuyang19900520.shiro;
 
-import com.liuyang19900520.shiro.jwt.HmacToken;
+import com.liuyang19900520.shiro.token.HmacToken;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.subject.SubjectContext;
