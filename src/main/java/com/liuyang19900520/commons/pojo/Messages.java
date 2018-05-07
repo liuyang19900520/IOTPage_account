@@ -11,9 +11,9 @@ public enum Messages {
 
     OK(200, "请求成功"),
     BAD_REQUEST(400, "请求出错"),
-    UNAUTHORIZED(401, "没有登录"),
-    FORBIDDEN(403, "没有权限"),
-    NOT_FOUND(404, "找不到资源"),
+    UNAUTHORIZED(401, "未通过认证"),
+    FORBIDDEN(403, "无权限"),
+    NOT_FOUND(404, "未找到资源"),
     INTERNAL_SERVER_ERROR(500, "服务器出错");
 
     private final int value;

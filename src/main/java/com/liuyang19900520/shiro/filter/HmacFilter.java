@@ -14,6 +14,7 @@ import org.apache.shiro.authc.*;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.web.filter.AccessControlFilter;
 import org.apache.shiro.web.util.WebUtils;
+import org.springframework.http.HttpStatus;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -51,6 +52,7 @@ public class HmacFilter extends StatelessFilter {
     @Override
     protected boolean onAccessDenied(ServletRequest request, ServletResponse response)
             throws Exception {
+        HttpServletResponse req = (HttpServletResponse) response;
         //如果是Hmac鉴权的请求
         if (isHmacSubmission(request)) {
             //创建令牌
@@ -65,23 +67,30 @@ public class HmacFilter extends StatelessFilter {
             } catch (UnknownAccountException exception) {
                 exception.printStackTrace();
                 log.info("账号不存在");
-                ResultVo.error(Messages.UNAUTHORIZED,exception.getMessage());
+                WebUtils.toHttp(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, String.valueOf(ResultVo.error(Messages.UNAUTHORIZED, exception.getMessage())));
+
             } catch (IncorrectCredentialsException exception) {
                 exception.printStackTrace();
                 log.info("错误的凭证，用户名或密码不正确");
-                ResultVo.error(Messages.UNAUTHORIZED,exception.getMessage());
+                ResultVo.error(Messages.UNAUTHORIZED, exception.getMessage());
             } catch (LockedAccountException exception) {
                 exception.printStackTrace();
                 log.info("账户已锁定");
-                ResultVo.error(Messages.UNAUTHORIZED,exception.getMessage());
+                ResultVo.error(Messages.UNAUTHORIZED, exception.getMessage());
             } catch (ExcessiveAttemptsException exception) {
                 exception.printStackTrace();
                 log.info("错误次数过多");
-                ResultVo.error(Messages.UNAUTHORIZED,exception.getMessage());
+                ResultVo.error(Messages.UNAUTHORIZED, exception.getMessage());
             } catch (AuthenticationException exception) {
                 exception.printStackTrace();
                 log.info("认证失败");
-                ResultVo.error(Messages.UNAUTHORIZED,exception.getMessage());
+                //WebUtils.toHttp(response).sendError(HttpServletResponse.SC_UNAUTHORIZED, String.valueOf(ResultVo.error(Messages.UNAUTHORIZED, exception.getMessage())));
+                //        ex.printStackTrace();
+                req.setContentType("application/json;charset=UTF-8");
+                req.setHeader("Access-Control-Allow-Origin", "*");
+                req.setStatus(HttpStatus.UNAUTHORIZED.value());
+
+                response.getOutputStream().write(JsonUtils.objectToJson(ResultVo.error(Messages.UNAUTHORIZED, exception.getMessage())).getBytes());
             }
 
         }

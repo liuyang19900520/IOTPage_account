@@ -1,9 +1,11 @@
 package com.liuyang19900520;
 
+import com.google.common.base.Splitter;
 import com.liuyang19900520.utils.CryptoUtil;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,6 +42,17 @@ public class ApplicationTests {
 
 //        System.out.println(parse.toString());
 
+        String stores = "0";
+        Iterable<String> splitStores = Splitter.on(',').split(stores);
+
+
+
+        for (String storeStr : splitStores) {
+            if (StringUtils.isBlank(storeStr) ) {
+
+                break;
+            }
+        }
     }
 
 
