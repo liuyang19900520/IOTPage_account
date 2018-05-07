@@ -30,7 +30,7 @@ spring:
     maintainTimeStats: false
 
 swagger:
-  host: localhost:8080
+  host: localhost:8085
 
 jwt:
 #  header: Authorization

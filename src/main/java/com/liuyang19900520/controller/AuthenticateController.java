@@ -7,10 +7,15 @@ import com.liuyang19900520.commons.pojo.Messages;
 import com.liuyang19900520.commons.pojo.ResultVo;
 import com.liuyang19900520.domain.SysResource;
 import com.liuyang19900520.domain.SysRole;
+import com.liuyang19900520.domain.SysUser;
 import com.liuyang19900520.service.AuthenticateService;
 import com.liuyang19900520.shiro.LoginUser;
 import com.liuyang19900520.utils.CryptoUtil;
 import io.jsonwebtoken.Claims;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +39,7 @@ import java.util.stream.Stream;
  * @author liuya
  */
 @Slf4j
+
 @RestController
 @RequestMapping("/auth")
 public class AuthenticateController {
@@ -69,8 +75,11 @@ public class AuthenticateController {
      * @param loginUser
      * @return
      */
+    @ApiResponses({@ApiResponse(code = 200, message = "请求成功", response = SysUser.class)})
+    @ApiOperation(value = "system login")
+    @ApiParam(name = "Authorization",type="header")
     @PostMapping("/login")
-    public Object applyToken(@RequestBody LoginUser loginUser, Device device) {
+    public ResultVo login(@RequestBody LoginUser loginUser, Device device) {
 
         Set<String> roles = authenticateService.listRolesByAccount(loginUser.getUsername());
         Set<String> permissions = authenticateService.listPermissionsByAccount(loginUser.getUsername());
@@ -89,18 +98,23 @@ public class AuthenticateController {
                 rolesJwt, permsJwt, new Date(), CryptoUtil.ACCESS_TOKEN_TYPE);
 
         String refresh = CryptoUtil.issueJwt(UUID.randomUUID().toString(), loginUser.getUsername(),
-                rolesJwt,permsJwt, new Date(), CryptoUtil.REFRESH_TOKEN_TYPE);
+                rolesJwt, permsJwt, new Date(), CryptoUtil.REFRESH_TOKEN_TYPE);
 
         HashMap<String, String> tokens = Maps.newHashMap();
         tokens.put("token", jwt);
         tokens.put("refreshToken", refresh);
 
-        return ResultVo.success(Messages.OK, tokens);
+        SysUser sysUser = new SysUser();
+        sysUser.setToken(jwt);
+        sysUser.setRefreshToken(refresh);
+
+
+        return ResultVo.success(Messages.OK, sysUser);
     }
 
 
-    @PostMapping
-    public Object logout(HttpServletRequest request) {
+    @PostMapping("/logout")
+    public ResultVo logout(HttpServletRequest request) {
         String token = request.getHeader("token");
         Claims claims = CryptoUtil.parserToken(token);
         redisTemplate.boundValueOps(claims.getSubject()).set(token, 30 * 60 * 1000L);

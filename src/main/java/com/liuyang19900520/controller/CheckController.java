@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,18 +20,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class CheckController {
 
 
-    @RequestMapping("/jwt")
+    @PostMapping("/jwt")
     public Object checkJwt() {
         return ResultVo.success(Messages.OK, "token checked success");
     }
 
-    @RequestMapping("/roles/admin")
+    @PostMapping("/roles/admin")
     public Object checkAdmin() {
         System.out.println("success");
         return ResultVo.success(Messages.OK, "admin checked sucess");
     }
 
-    @RequestMapping("/roles/super")
+    @PostMapping("/roles/super")
     public Object checkSuper() {
         System.out.println("success");
         return ResultVo.success(Messages.OK, "admin checked sucess");

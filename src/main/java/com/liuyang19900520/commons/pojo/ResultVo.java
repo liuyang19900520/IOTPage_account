@@ -1,5 +1,7 @@
 package com.liuyang19900520.commons.pojo;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -7,24 +9,30 @@ import lombok.Data;
  *
  * @author liuya
  */
+
 @Data
 public class ResultVo {
     /**
      * 结果-1 失败，1-成功
      */
+
     private int ret;
     /**
      * 结果代码
      */
+
     private int code;
     /**
      * 结果消息
      */
+
     private String msg;
     /**
      * 结果数据
      */
+
     private Object data;
+
 
     private long timestamp;
 
