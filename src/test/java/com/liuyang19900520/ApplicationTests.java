@@ -1,6 +1,7 @@
 package com.liuyang19900520;
 
 import com.google.common.base.Splitter;
+import com.liuyang19900520.service.EmailService;
 import com.liuyang19900520.utils.CryptoUtil;
 import io.jsonwebtoken.Jwt;
 import io.jsonwebtoken.Jwts;
@@ -8,6 +9,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
@@ -23,6 +25,9 @@ public class ApplicationTests {
     private static final String SECRET_KEY = "*(-=4eklfasdfarerf41585fdasf";
 
     private static String APP_KEY = "E2B7B173A8801CD1455878A1383B2337";
+
+    @Autowired
+    EmailService emailService;
 
     @Test
     public void applyToken() {
@@ -45,14 +50,14 @@ public class ApplicationTests {
         String stores = "0";
         Iterable<String> splitStores = Splitter.on(',').split(stores);
 
-
-
         for (String storeStr : splitStores) {
-            if (StringUtils.isBlank(storeStr) ) {
-
+            if (StringUtils.isBlank(storeStr)) {
                 break;
             }
         }
+        emailService.sendSimpleMessage("576996936@qq.com", "test", "liuyang test");
+
+
     }
 
 

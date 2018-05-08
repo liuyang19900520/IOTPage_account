@@ -2,6 +2,7 @@ package com.liuyang19900520.commons.pojo;
 
 /**
  * Message类别
+ *
  * @author liuya
  */
 
@@ -14,7 +15,8 @@ public enum Messages {
     UNAUTHORIZED(401, "未通过认证"),
     FORBIDDEN(403, "无权限"),
     NOT_FOUND(404, "未找到资源"),
-    INTERNAL_SERVER_ERROR(500, "服务器出错");
+    INTERNAL_SERVER_ERROR(500, "服务器出错"),
+    USER_EXISTED(10001, "注册用户存在");
 
     private final int value;
 

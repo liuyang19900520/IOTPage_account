@@ -5,8 +5,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.liuyang19900520.commons.pojo.Messages;
 import com.liuyang19900520.commons.pojo.ResultVo;
-import com.liuyang19900520.domain.SysResource;
-import com.liuyang19900520.domain.SysRole;
 import com.liuyang19900520.domain.SysUser;
 import com.liuyang19900520.service.AuthenticateService;
 import com.liuyang19900520.shiro.LoginUser;
@@ -18,6 +16,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mobile.device.Device;
@@ -30,8 +29,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * Created by liuyang on 2018/3/16
@@ -77,7 +74,7 @@ public class AuthenticateController {
      */
     @ApiResponses({@ApiResponse(code = 200, message = "请求成功", response = SysUser.class)})
     @ApiOperation(value = "system login")
-    @ApiParam(name = "Authorization",type="header")
+    @ApiParam(name = "Authorization", type = "header")
     @PostMapping("/login")
     public ResultVo login(@RequestBody LoginUser loginUser, Device device) {
 
@@ -121,5 +118,22 @@ public class AuthenticateController {
         return ResultVo.success(Messages.OK, null);
     }
 
+    @PostMapping("/regist/email")
+    public Object register(@RequestBody SysUser user) {
+        if (StringUtils.isNotBlank(user.getEmail())) {
+            return authenticateService.regist("email", user);
+        }
+        if (StringUtils.isNotBlank(user.getMobilePhone())) {
+            return authenticateService.regist("mobile", user);
+        }
+        return ResultVo.error(Messages.OK, "failed");
+    }
+
+    @GetMapping("/active")
+    public Object active(HttpServletRequest request) {
+        String code = request.getParameter("code");
+        authenticateService.active(code);
+        return ResultVo.success(Messages.OK, null);
+    }
 
 }

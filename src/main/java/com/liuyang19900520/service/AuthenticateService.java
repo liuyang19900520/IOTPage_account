@@ -40,6 +40,9 @@ public interface AuthenticateService {
     Set<String> listPermissionsByAccount(String userName);
 
 
+    Object regist(String type, SysUser user);
+
+    Object active(String coed);
 
 
 }

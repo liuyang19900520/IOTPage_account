@@ -7,6 +7,7 @@
     <resultMap id="result" type="com.liuyang19900520.domain.SysUser" extends="baseResult">
         <result property="userName" column="user_name"/>
         <result property="password" column="password"/>
+        <result property="mobilePhone" column="mobile_phone"/>
         <result property="avatar" column="avatar"/>
         <result property="nickname" column="nickname"/>
         <result property="email" column="email"/>
@@ -50,5 +51,34 @@
             INNER JOIN sys_user u ON u.id = ur.user_id
         WHERE u.user_name = #{userName}
     </select>
+
+
+    <select id="checkRegistUser" resultType="com.liuyang19900520.domain.SysUser">
+        SELECT * FROM sys_user
+        WHERE 1=0
+        <if test="mobilePhone !=null and mobilePhone !=''">
+            OR mobile_phone=#{mobilePhone}
+        </if>
+        <if test="email !=null and email !=''">
+            OR email=#{email}
+        </if>
+        <if test="userName !=null and userName !=''">
+            OR user_name=#{userName}
+        </if>
+    </select>
+
+    <insert id="insertUser" parameterType="com.liuyang19900520.domain.SysUser">
+        INSERT INTO sys_user (mobile_phone, user_name, nickname, password, salt,
+        signature, gender, qq, email, avatar, province, city, reg_ip, score, status, create_by, create_at, update_by, update_at)
+        VALUES (#{mobilePhone},#{userName},#{nickname},#{password},#{salt},#{signature},#{gender},#{qq},#{email},#{avatar},#{province},
+        #{city},#{regIp},#{score},#{status},#{createBy},#{createAt},#{updateBy},#{updateAt}
+        )
+    </insert>
+
+    <update id="activeUser">
+        UPDATE sys_user SET status=0
+        WHERE signature=#{code}
+    </update>
+
 
 </mapper>
