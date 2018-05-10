@@ -45,11 +45,11 @@ public class SysUser {
 
     private Integer status;
 
-    private Long createBy;
+    private String createBy;
 
     private Date createAt;
 
-    private Long updateBy;
+    private String updateBy;
 
     private Date updateAt;
     @ApiModelProperty(notes = "The token of the product", required = true)

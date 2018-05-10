@@ -5,12 +5,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.liuyang19900520.commons.pojo.Messages;
 import com.liuyang19900520.commons.pojo.ResultVo;
-import com.liuyang19900520.domain.SysResource;
-import com.liuyang19900520.domain.SysRole;
 import com.liuyang19900520.domain.SysUser;
 import com.liuyang19900520.service.AuthenticateService;
 import com.liuyang19900520.shiro.LoginUser;
 import com.liuyang19900520.utils.CryptoUtil;
+import com.yunpian.sdk.YunpianClient;
+import com.yunpian.sdk.model.Result;
+import com.yunpian.sdk.model.SmsSingleSend;
 import io.jsonwebtoken.Claims;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -18,6 +19,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mobile.device.Device;
@@ -30,8 +32,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * Created by liuyang on 2018/3/16
@@ -77,7 +77,7 @@ public class AuthenticateController {
      */
     @ApiResponses({@ApiResponse(code = 200, message = "请求成功", response = SysUser.class)})
     @ApiOperation(value = "system login")
-    @ApiParam(name = "Authorization",type="header")
+    @ApiParam(name = "Authorization", type = "header")
     @PostMapping("/login")
     public ResultVo login(@RequestBody LoginUser loginUser, Device device) {
 
@@ -121,5 +121,46 @@ public class AuthenticateController {
         return ResultVo.success(Messages.OK, null);
     }
 
+    @PostMapping("/regist/email")
+    public Object register(@RequestBody SysUser user) {
+        if (StringUtils.isNotBlank(user.getEmail())) {
+            return authenticateService.regist("email", user);
+        }
+        if (StringUtils.isNotBlank(user.getMobilePhone())) {
+            return authenticateService.regist("mobile", user);
+        }
+        return ResultVo.error(Messages.OK, "failed");
+    }
+
+    @GetMapping("/active")
+    public Object active(HttpServletRequest request) {
+        String code = request.getParameter("code");
+        authenticateService.active(code);
+        return ResultVo.success(Messages.OK, null);
+    }
+
+    @PostMapping("/message")
+    public ResultVo sendMessage(HttpServletRequest request) {
+        int code = (int) ((Math.random() * 9 + 1) * 100000);
+        //初始化clnt,使用单例方式
+        YunpianClient clnt = new YunpianClient("9add2180ecb503f6cf3da38b147b49e1").init();
+
+        //发送短信API
+        Map<String, String> param = clnt.newParam(2);
+        param.put(YunpianClient.MOBILE, "15943040340");
+        param.put(YunpianClient.TEXT, "【東京IAIA】您的验证码是" + code + "。如非本人操作，请忽略本短信");
+        Result<SmsSingleSend> r = clnt.sms().single_send(param);
+        if (r.getCode() == 0) {
+            redisTemplate.boundValueOps(String.valueOf(code)).set(code, 300, TimeUnit.SECONDS);
+            return ResultVo.success(Messages.OK, null);
+        }
+//获取返回结果，返回码:r.getCode(),返回码描述:r.getMsg(),API结果:r.getData(),其他说明:r.getDetail(),调用异常:r.getThrowable()
+
+//账户:clnt.user().* 签名:clnt.sign().* 模版:clnt.tpl().* 短信:clnt.sms().* 语音:clnt.voice().* 流量:clnt.flow().* 隐私通话:clnt.call().*
+
+//释放clnt
+        clnt.close();
+        return ResultVo.error(Messages.MESSAGE_ERROR, r.getDetail());
+    }
 
 }

@@ -21,5 +21,11 @@ public interface SysUserDao {
 
     Set<String> listPermissionsByAccount(@Param("userName") String userName);
 
+    SysUser checkRegistUser(SysUser user);
+
+    int insertUser(SysUser user);
+
+    int activeUser(@Param("code") String code);
+
 
 }

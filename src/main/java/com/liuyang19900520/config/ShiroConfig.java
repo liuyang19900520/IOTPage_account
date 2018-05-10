@@ -88,8 +88,9 @@ public class ShiroConfig {
         // 拦截器
         Map<String, String> filterChainDefinitionMap = new LinkedHashMap<String, String>();
         // 允许用户匿名访问/login(登录接口)
-        filterChainDefinitionMap.put("/auth/**", "json,hmac");
-
+        filterChainDefinitionMap.put("/auth/login", "json,hmac");
+        filterChainDefinitionMap.put("/auth/regist/**", "anon");
+        filterChainDefinitionMap.put("/auth/active", "anon");
         // 验证码允许匿名访问
         filterChainDefinitionMap.put("/captcha", "anon");
         filterChainDefinitionMap.put("/api-docs", "anon");
