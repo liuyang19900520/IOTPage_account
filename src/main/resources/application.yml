@@ -60,4 +60,28 @@ server:
 
 
 
+## http
+http:
+  conn:
+    timeout: 10000
+    maxperroute: 50
+    http.conn.maxtotal : 200
+  so:
+    timeout: 30000
+  charset: utf-8
+
+## yunpian
+#yp.apikey =
+yp:
+  version: v2
+  user.host: https://sms.yunpian.com
+  sign.host : https://sms.yunpian.com
+  tpl.host: https://sms.yunpian.com
+  sms.host :  https://sms.yunpian.com
+  short_url.host :  https://sms.yunpian.com
+  voice.host :  https://voice.yunpian.com
+  flow.host :  https://flow.yunpian.com
+  call.host :  https://call.yunpian.com
+
+
 

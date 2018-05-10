@@ -11,6 +11,7 @@ import com.liuyang19900520.service.EmailService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -33,6 +34,9 @@ public class AuthenticateServiceImpl implements AuthenticateService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    ThreadPoolTaskExecutor taskExecutor;
 
     @Override
     public SysUser findUserByAccount(String userName) {
@@ -81,9 +85,9 @@ public class AuthenticateServiceImpl implements AuthenticateService {
             if (i > 0) {
                 redisTemplate.boundValueOps(code).set(code, 10, TimeUnit.MINUTES);
                 String to = user.getEmail();
-                String subject = "active register email";
-                String content = "点击此链接激活     " +
-                        " http://localhost:8085/auth/active?code=" + code;
+                String subject = "【東京IAIA】 注册验证";
+                String content = "来自【東京IAIA】" + "\n" + "亲爱的" + user.getUserName() + "\n" + "    欢迎您注册东京IOT AI 产业联盟，点击此链接激活，完成注册" + "\n" +
+                        " http://localhost:8085/auth/active?code=" + code + "\n" + "如果不能调转，可将连接复制到浏览器中进行访问";
 
                 Runnable emailRunnable = new Runnable() {
                     @Override
@@ -91,9 +95,7 @@ public class AuthenticateServiceImpl implements AuthenticateService {
                         emailService.sendSimpleMessage(to, subject, content);
                     }
                 };
-                Thread thread = new Thread(emailRunnable);
-                thread.start();
-
+                taskExecutor.execute(emailRunnable);
 
                 return ResultVo.success(Messages.OK, "注册成功,请激活");
             }

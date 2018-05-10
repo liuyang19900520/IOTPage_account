@@ -16,6 +16,10 @@ public enum Messages {
     FORBIDDEN(403, "无权限"),
     NOT_FOUND(404, "未找到资源"),
     INTERNAL_SERVER_ERROR(500, "服务器出错"),
+
+
+
+    MESSAGE_ERROR(10002, "验证短信发送失败"),
     USER_EXISTED(10001, "注册用户存在");
 
     private final int value;

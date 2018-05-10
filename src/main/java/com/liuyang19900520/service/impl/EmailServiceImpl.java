@@ -5,16 +5,19 @@ import com.liuyang19900520.domain.SysUser;
 import com.liuyang19900520.service.AuthenticateService;
 import com.liuyang19900520.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.File;
 import java.util.Set;
+import java.util.concurrent.*;
 
 /**
  * Created by liuyang on 2018/3/16
