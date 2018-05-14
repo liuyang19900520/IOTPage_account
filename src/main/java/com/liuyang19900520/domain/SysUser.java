@@ -25,6 +25,8 @@ public class SysUser {
 
     private String salt;
 
+    private String mobileVersionCode;
+
     private String signature;
 
     private Boolean gender;
