@@ -127,6 +127,7 @@ public class AuthenticateController {
             return authenticateService.regist("email", user);
         }
         if (StringUtils.isNotBlank(user.getMobilePhone())) {
+
             return authenticateService.regist("mobile", user);
         }
         return ResultVo.error(Messages.OK, "failed");
@@ -140,18 +141,20 @@ public class AuthenticateController {
     }
 
     @PostMapping("/message")
-    public ResultVo sendMessage(HttpServletRequest request) {
+    public ResultVo sendMessage(String mobilePhone) {
         int code = (int) ((Math.random() * 9 + 1) * 100000);
         //初始化clnt,使用单例方式
-        YunpianClient clnt = new YunpianClient("9add2180ecb503f6cf3da38b147b49e1").init();
+        YunpianClient clnt = new YunpianClient("b80f53ad687c17fe8bd1138823471702").init();
 
         //发送短信API
         Map<String, String> param = clnt.newParam(2);
-        param.put(YunpianClient.MOBILE, "15943040340");
-        param.put(YunpianClient.TEXT, "【東京IAIA】您的验证码是" + code + "。如非本人操作，请忽略本短信");
+        param.put(YunpianClient.MOBILE, "+8107048134977");
+//        param.put(YunpianClient.SIGN, "【IAIA】");
+//        param.put(YunpianClient.SIGN,"[IAIA]");
+        param.put(YunpianClient.TEXT, "【IAIA】Your verification code is " + code+ " ." );
         Result<SmsSingleSend> r = clnt.sms().single_send(param);
         if (r.getCode() == 0) {
-            redisTemplate.boundValueOps(String.valueOf(code)).set(code, 300, TimeUnit.SECONDS);
+            redisTemplate.boundValueOps(String.valueOf(mobilePhone)).set(code, 300, TimeUnit.SECONDS);
             return ResultVo.success(Messages.OK, null);
         }
 //获取返回结果，返回码:r.getCode(),返回码描述:r.getMsg(),API结果:r.getData(),其他说明:r.getDetail(),调用异常:r.getThrowable()
